@@ -1,0 +1,225 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// User model for authentication and account management
+model User {
+  id                 String      @id @default(cuid())
+  email              String      @unique
+  username           String      @unique
+  passwordHash       String
+  
+  // Wallet information
+  solanaAddress      String      @unique
+  publicKey          String      @unique
+  
+  // Account status and preferences
+  isActive           Boolean     @default(true)
+  isVerified         Boolean     @default(false)
+  preferredLanguage  String      @default("en")
+  theme              String      @default("light")
+  
+  // Biometric authentication
+  biometricEnabled   Boolean     @default(false)
+  biometricTemplate  String?     @db.Text
+  
+  // Audit fields
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+  lastLoginAt        DateTime?
+  
+  // Relations
+  transactions       Transaction[]
+  walletHistories    WalletHistory[]
+  settings           UserSettings?
+  sessions           Session[]
+  
+  @@index([email])
+  @@index([solanaAddress])
+  @@index([createdAt])
+}
+
+// Session management for user authentication
+model Session {
+  id                 String      @id @default(cuid())
+  userId             String
+  user               User        @relation(fields:  [userId], references: [id], onDelete: Cascade)
+  
+  token              String      @unique
+  refreshToken       String?     @unique
+  
+  ipAddress          String?
+  userAgent          String?
+  
+  isActive           Boolean     @default(true)
+  expiresAt          DateTime
+  
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+  
+  @@index([userId])
+  @@index([token])
+}
+
+// User preferences and settings
+model UserSettings {
+  id                 String      @id @default(cuid())
+  userId             String      @unique
+  user               User        @relation(fields: [userId], references: [id], onDelete:  Cascade)
+  
+  // Notifications
+  notificationsEnabled Boolean   @default(true)
+  emailNotifications  Boolean    @default(true)
+  pushNotifications   Boolean    @default(true)
+  
+  // Transaction settings
+  defaultGasLimit    BigInt      @default(200000)
+  minTransactionAmount BigInt    @default(1000) // in lamports
+  
+  // Security settings
+  twoFactorEnabled   Boolean     @default(false)
+  ipWhitelist        String?     @db.Text
+  
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+}
+
+// Wallet and balance tracking
+model Wallet {
+  id                 String      @id @default(cuid())
+  userId             String      @unique
+  
+  balance            BigInt      @default(0) // in lamports
+  solBalance         Float       @default(0)
+  
+  tokenAccounts      String      @db.Text @default("[]") // JSON array of token accounts
+  
+  lastSyncedAt       DateTime?
+  
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+  
+  @@index([userId])
+}
+
+// Wallet balance history for analytics
+model WalletHistory {
+  id                 String      @id @default(cuid())
+  userId             String
+  user               User        @relation(fields:  [userId], references: [id], onDelete: Cascade)
+  
+  balance            BigInt      // Balance in lamports
+  solBalance         Float
+  
+  changeAmount       BigInt? 
+  changePercentage   Float?
+  
+  createdAt          DateTime    @default(now())
+  
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// Main transaction model
+model Transaction {
+  id                 String      @id @default(cuid())
+  userId             String
+  user               User        @relation(fields:  [userId], references: [id], onDelete: Cascade)
+  
+  // Transaction details
+  type               TransactionType
+  status             TransactionStatus @default(PENDING)
+  
+  // Solana-specific
+  signature          String?      @unique
+  blockhash          String? 
+  slot               BigInt?
+  
+  // Amounts
+  amount             BigInt      // in lamports
+  fee                BigInt?      // Transaction fee in lamports
+  
+  // Addresses
+  fromAddress        String
+  toAddress          String
+  
+  // Token info
+  tokenAddress       String? 
+  tokenDecimals      Int?
+  
+  // Metadata
+  description        String?     @db.Text
+  memo               String? 
+  
+  // Timestamps
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+  confirmedAt        DateTime?
+  
+  // Audit
+  retryCount         Int         @default(0)
+  errorMessage       String?
+  rawData            String?     @db.Text // JSON serialized transaction data
+  
+  // Gasless transaction info
+  isGasless          Boolean     @default(false)
+  paymasterAddress   String? 
+  
+  @@index([userId])
+  @@index([signature])
+  @@index([status])
+  @@index([createdAt])
+  @@index([toAddress])
+}
+
+// Transaction types
+enum TransactionType {
+  TRANSFER
+  AIRDROP
+  SWAP
+  STAKE
+  UNSTAKE
+  MINT_TOKEN
+  BURN_TOKEN
+}
+
+// Transaction status
+enum TransactionStatus {
+  PENDING
+  CONFIRMING
+  CONFIRMED
+  FAILED
+  CANCELLED
+  DROPPED
+}
+
+// Activity log for audit trail
+model ActivityLog {
+  id                 String      @id @default(cuid())
+  userId             String
+  
+  action             String
+  resourceType       String
+  resourceId         String? 
+  
+  details            String      @db.Text // JSON
+  ipAddress          String?
+  userAgent          String?
+  
+  createdAt          DateTime    @default(now())
+  
+  @@index([userId])
+  @@index([createdAt])
+  @@index([action])
+}
