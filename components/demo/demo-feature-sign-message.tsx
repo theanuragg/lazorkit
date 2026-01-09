@@ -1,7 +1,6 @@
 import { AppView } from '@/components/app-view'
 import { AppText } from '@/components/app-text'
-import { PublicKey } from '@solana/web3.js'
-import Snackbar from 'react-native-snackbar'
+import { PublicKey } from '@solana/web3.js';
 import { ActivityIndicator, TextInput, View } from 'react-native'
 import React, { useState } from 'react'
 import { Button } from '@react-navigation/elements'
@@ -52,10 +51,6 @@ export function DemoFeatureSignMessage({ address }: { address: PublicKey }) {
                 .mutateAsync({ message })
                 .then(() => {
                   console.log(`Signed message: ${message} with ${address.toString()}`)
-                  Snackbar.show({
-                    text: `Signed message with ${ellipsify(address.toString(), 8)}`,
-                    duration: Snackbar.LENGTH_SHORT,
-                  })
                 })
                 .catch((err) => console.log(`Error signing message: ${err}`, err))
             }}
