@@ -1,11 +1,10 @@
-/*
- main server entry point
-  sets up Express server with all middleware and routes
-*/
+import app from './app';
+import { getEnv } from './config/env';
 
-import express, { Express, Request, Response, NextFunction } from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import compression from 'compression';
-import morgan from 'morgan';
-import { PrismaClient } from '@prisma/client';
+const env = getEnv();
+const port = env.PORT || 3000;
+
+app.listen(port, () => {
+  console.log(`Server running on http://localhost:${port}`);
+  console.log(`Health check: http://localhost:${port}/health`);
+});
