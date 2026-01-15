@@ -1,9 +1,10 @@
+import { AppTheme } from '@/components/app-theme'
+import { AuthProvider } from '@/components/auth/auth-provider'
+import { ClusterProvider, useCluster } from '@/components/cluster/cluster-provider'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MobileWalletProvider } from '@wallet-ui/react-native-web3js'
 import { PropsWithChildren } from 'react'
-import { AuthProvider } from '@/components/auth/auth-provider'
-import { ClusterProvider, useCluster } from '@/components/cluster/cluster-provider'
-import { AppTheme } from '@/components/app-theme'
+import { LazorProvider } from './LazorProvider'
 
 const queryClient = new QueryClient()
 export function AppProviders({ children }: PropsWithChildren) {
@@ -12,7 +13,9 @@ export function AppProviders({ children }: PropsWithChildren) {
       <QueryClientProvider client={queryClient}>
         <ClusterProvider>
           <SolanaProvider>
-            <AuthProvider>{children}</AuthProvider>
+            <LazorProvider>
+              <AuthProvider>{children}</AuthProvider>
+            </LazorProvider>
           </SolanaProvider>
         </ClusterProvider>
       </QueryClientProvider>
