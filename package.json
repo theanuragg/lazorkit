@@ -14,8 +14,7 @@
     "lint:check": "expo lint",
     "reset-project": "node ./scripts/reset-project.js",
     "start": "expo start",
-    "web": "expo start --web",
-    
+    "web": "expo start --web"
   },
   "displayName": "Mobile Expo Boilerplate",
   "description": "A template for building a Solana mobile app with Expo and React Native.",
@@ -40,6 +39,7 @@
   "version": "1.0.0",
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
+    "@lazorkit/wallet": "^2.0.1",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-clipboard/clipboard": "^1.16.2",
     "@react-native-community/cli": "^20.1.0",
